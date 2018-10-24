@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fonts/Roboto-Regular.ttf</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>icons/france.png</file>
+        <file>icons/germany.png</file>
+        <file>icons/italy.png</file>
+        <file>icons/russia.png</file>
+        <file>icons/spain.png</file>
+        <file>icons/united-kingdom.png</file>
+        <file>icons/united-nations.png</file>
+    </qresource>
+</RCC>

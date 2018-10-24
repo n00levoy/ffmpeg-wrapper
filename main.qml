@@ -1,9 +1,13 @@
 import QtQuick 2.6
 import QtQuick.Window 2.2
 
+import QtQuick.Layouts 1.3
+
 import QtQuick.Controls 2.4
 import QtQuick.Controls.Material 2.3
 import QtQuick.Dialogs 1.2
+
+import FFMpeg.Wrapper 1.0
 
 Window {
     visible: true
@@ -15,9 +19,20 @@ Window {
 
     title: qsTr("Конвертер медиафайлов")
 
-    Material.accent: Material.Blue
-
     FontLoader { id: fixedFont; source: "/fonts/Roboto-Regular.ttf" }
+
+    Converter {
+        id: converter
+
+        inputFilename: filenameField.text
+        outputFilename: outFilenameField.text
+
+        onMediaDataLoaded: {
+            videoBitrateField.text = videoBitrate.toString()
+            frameWidthField.text = frameWidth.toString()
+            frameHeightField.text = frameHeight.toString()
+        }
+    }
 
     Label {
         id: filenameLabel
@@ -50,6 +65,10 @@ Window {
 
         placeholderText: "Путь к файлу"
         font.pixelSize: 18
+
+        onTextChanged: {
+            converter.inputFilename = text
+        }
     }
 
     Button {
@@ -211,13 +230,149 @@ Window {
     ListView {
         id: subtilesListView
 
+        model: converter.subtitleModel()
+
         anchors.top: subtitlesMetaDataLabel.bottom
         anchors.left: subtitlesMetaDataLabel.left
 
         width: halfWidth - 20
 
-        delegate: ItemDelegate {
+        delegate: Item {
+            id: subtitleDelegate
 
+            height: 50
+            width: parent.width
+
+            Text {
+                id: subtitleIdLabel
+
+                height: parent.height
+                width: 20
+
+                x: 0
+                y: 0
+
+                verticalAlignment: Qt.AlignVCenter
+
+                text: "#" + index
+                font.pixelSize: 16
+            }
+
+            TextField {
+                id: subtitleTitleField
+
+                anchors.left: subtitleIdLabel.right
+                anchors.leftMargin: 10
+                anchors.right: subtitleLanguageBox.left
+                anchors.rightMargin: 10
+                anchors.top: subtitleIdLabel.top
+
+                height: parent.height
+
+                placeholderText: "Название субтитров"
+                font.pixelSize: 14
+
+                Component.onCompleted: {
+                    text = title
+                }
+
+                onTextChanged: {
+                    title = text
+                }
+            }
+
+            ComboBox {
+                id: subtitleLanguageBox
+
+                anchors.right: subtitleDeleteButton.left
+                anchors.rightMargin: 10
+                anchors.top: subtitleTitleField.top
+
+                height: subtitleDelegate.height
+                width: 140
+
+                flat: true
+
+                model: ListModel {
+                    id: countriesModel
+
+                    ListElement {
+                        name: ""
+                        source: "icons/united-nations.png"
+                    }
+
+                    ListElement {
+                        name: "Русский"
+                        source: "icons/russia.png"
+                    }
+
+                    ListElement {
+                        name: "Английский"
+                        source: "icons/united-kingdom.png"
+                    }
+                }
+
+                delegate: ItemDelegate {
+                    width: parent.width
+
+                    text: name
+                    font.pixelSize: 12
+
+                    icon.name: "countryIcon"
+                    icon.source: source
+                    icon.height: 30
+                    icon.width: 30
+                    icon.color: "transparent"
+                }
+
+                textRole: "name"
+                font.pixelSize: 14
+
+                Component.onCompleted: {
+                    if(language == "rus")
+                        currentIndex = 1;
+                    if(language == "eng")
+                        currentIndex = 2;
+                }
+
+                onActivated: {
+                    var lang
+                    switch(currentIndex) {
+                    case 0:
+                        lang = ""
+                        break
+                    case 1:
+                        lang = "rus"
+                        break
+                    case 2:
+                        lang = "eng"
+                        break
+                    }
+
+                    language = lang
+                }
+            }
+
+            Button {
+                id: subtitleDeleteButton
+
+                anchors.top: subtitleLanguageBox.top
+                anchors.right: parent.right
+
+                height: parent.height
+                width: 80
+
+                text: "Удалить"
+                font.pixelSize: 14
+
+                onClicked: {
+                    converter.subtitleModel().removeRows(index, 1)
+                }
+            }
+        }
+
+        onCountChanged: {
+            height = count * 50
         }
     }
 
@@ -232,13 +387,40 @@ Window {
 
         text: "Добавить субтитры..."
         font.pixelSize: 14
+
+        onClicked: {
+            subtitleFileDialog.visible = true
+        }
+    }
+
+    FileDialog {
+        id: subtitleFileDialog
+
+        title: "Выберите файл субтитров"
+        folder: shortcuts.home
+
+        nameFilters: [ "Субтитры (*.srt)"]
+
+        selectExisting: true
+        selectMultiple: false
+
+        onAccepted: {
+            var filename = outFileDialog.fileUrl
+            var subsUrl = filename.toString().replace("file:///", "");
+
+            converter.subtitleModel().addSubtitle(subsUrl)
+
+            setVisible(false)
+        }
+        onRejected: {
+            setVisible(false)
+        }
     }
 
     Button {
         id: multiplexButton
 
-        property var parentToAnchor: (subtilesListView.y + subtilesListView.height > videoBitrateField.y + videoBitrateField.width) ?
-                                     subtilesListView : videoBitrateField;
+        property var parentToAnchor: videoBitrateField;
 
         anchors.top: parentToAnchor.bottom
         anchors.topMargin: 10
@@ -249,6 +431,14 @@ Window {
 
         text: "Мультиплексировать"
         font.pixelSize: 18
+
+        onClicked: {
+            converter.frameWidth = frameWidthField.text
+            converter.frameHeight = frameHeightField.text
+            converter.videoBitrate = videoBitrateField.text
+
+            converter.mux()
+        }
     }
 
     Label {
@@ -279,7 +469,7 @@ Window {
         height: outFilenameLabel.height
         width: 250
 
-        text: qsTr("Сохранить в исходный файл")
+        text: qsTr("Заменить исходный файл")
 
         font.pixelSize: 14
         font.family: fixedFont.name
@@ -324,6 +514,10 @@ Window {
 
         placeholderText: "Путь к результирующему файлу"
         font.pixelSize: 18
+
+        onTextChanged: {
+            converter.outputFilename = text
+        }
     }
 
     Button {
@@ -388,8 +582,6 @@ Window {
         y: parent.height - height - 10
 
         width: parent.width - 30
-
-        value: 0
 
         background: Rectangle {
             implicitHeight: 22
