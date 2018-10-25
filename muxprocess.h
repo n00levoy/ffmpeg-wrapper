@@ -23,6 +23,12 @@ public:
 private:
     void run() override;
 
+signals:
+    void dataReadyRead(QString);
+    void firstPassFinished();
+    void muxStarted(bool two_pass);
+    void muxingFinished();
+
 private:
     int m_vb;
 

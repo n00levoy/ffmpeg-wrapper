@@ -15,6 +15,7 @@ Q_DECLARE_METATYPE(Subtitle)
 
 struct MediaData
 {
+    double duration = 0;
     int frame_width = -1;
     int frame_height = -1;
 

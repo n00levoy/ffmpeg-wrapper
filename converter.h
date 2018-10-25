@@ -63,10 +63,16 @@ signals:
 
     void mediaDataLoaded();
 
+    void muxStateUpdated(double percent);
+    void muxStarted(bool two_pass);
+    void firstPassFinished();
+    void muxingFinished();
+
 public slots:
 
 private slots:
     void readMediaData(MediaData data);
+    void readMuxState(QString info);
 };
 
 #endif // CONVERTER_H

@@ -71,8 +71,6 @@ bool SubtitleModel::setData(const QModelIndex& index, const QVariant& value, int
         break;
     }
 
-    qDebug() << index.row() << role << value;
-
     emit dataChanged(index, index);
     return true;
 }

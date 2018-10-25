@@ -1,6 +1,9 @@
 #include "muxprocess.h"
 
 #include <QProcess>
+#include <QFile>
+#include <QFileInfo>
+#include <QTime>
 
 #include <QDebug>
 
@@ -9,11 +12,13 @@ void MuxProcess::run()
     QProcess process;
     process.setProgram("bin/ffmpeg.exe");
     process.setReadChannelMode(QProcess::MergedChannels);
-    connect(&process, &QProcess::readyRead, [&process]() {
-        qDebug() << process.readAll();
-    });
 
-    int input_count = 1;
+    bool two_pass = (m_vb > 0);
+
+    connect(&process, &QProcess::readyRead, [this, &process]() {
+        auto data = QString::fromLatin1(process.readAll());
+        emit dataReadyRead(data);
+    });
 
     QStringList input_args;
     input_args << "-i"
@@ -21,13 +26,8 @@ void MuxProcess::run()
 
     for(auto sub: m_target_data.subs_list)
     {
-        qDebug() << sub.filename << sub.title;
-
         if(!sub.filename.isEmpty())
-        {
             input_args << "-i" << sub.filename;
-            input_count++;
-        }
     }
 
     int vs_count = 0;
@@ -60,8 +60,13 @@ void MuxProcess::run()
 
     QStringList codec_args;
     for(int i = 0; i < vs_count; i++)
-        codec_args << "-c:v:" + QString::number(i)
-                   << "copy";
+    {
+        codec_args << "-c:v:" + QString::number(i);
+        if(i == 0 && two_pass)
+            codec_args << "libx264";
+        else
+            codec_args << "copy";
+    }
     for(int i = 0; i < as_count; i++)
         codec_args << "-c:a:" + QString::number(i)
                    << "copy";
@@ -81,7 +86,7 @@ void MuxProcess::run()
                            << "language=" + sub.lang;
             if(!sub.title.isEmpty())
                 codec_args << "-metadata:s:s:" + stream_id
-                           << "title=\"" + sub.title + "\"";
+                           << "title=" + sub.title;
 
             ss_counter++;
         }
@@ -100,7 +105,7 @@ void MuxProcess::run()
                            << "language=" + sub.lang;
             if(!sub.title.isEmpty())
                 codec_args << "-metadata:s:s:" + stream_id
-                           << "title=\"" + sub.title + "\"";
+                           << "title=" + sub.title;
 
             ss_counter++;
         }
@@ -116,35 +121,84 @@ void MuxProcess::run()
         resize_args << "-s:v:0" << QString::number(tfw) + "x" + QString::number(tfh);
 
     QStringList bitrate_args;
-    if(m_vb > 0)
+    if(two_pass)
         bitrate_args << "-b:v:0" << QString::number(m_vb) + "k";
 
     QStringList output_args = QStringList() << m_out_filename;
 
-    qDebug() << input_args;
-    qDebug() << map_args;
-    qDebug() << codec_args;
-    qDebug() << resize_args;
-    qDebug() << bitrate_args;
-    qDebug() << output_args;
+    QFileInfo info(m_in_filename);
+    QString source_suffix = info.suffix();
 
-//    QStringList tp_fr_args;
-//    tp_fr_args << "-y"
-//               << "-i"
-//               << m_in_filename;
+    emit muxStarted(two_pass);
 
-//    if(!frame_args.isEmpty())
-//        args_firstrun << frame_args;
-//    args_firstrun << "-b:v"
-//                  << bitrate
-//                  << "-pass"
-//                  << "1"
-//                  << "-an"
-//                  << "-f"
-//                  << "mp4"
-//                  << "nul";
+    if(two_pass)
+    {
+        QStringList first_run_args;
+        first_run_args << "-y"
+                       << "-i"
+                       << m_in_filename;
 
+        if(!resize_args.isEmpty())
+            first_run_args << resize_args;
+
+        first_run_args << "-b:v" << QString::number(m_vb) + "k"
+                       << "-pass" << "1"
+                       << "-an" << "-sn";
+
+        if(source_suffix == "mp4")
+            first_run_args << "-f" << "mp4";
+        else if(source_suffix == "mkv")
+            first_run_args << "-f" << "matroska";
+
+        first_run_args << "nul";
+
+        process.setArguments(first_run_args);
+        process.start();
+        process.waitForFinished(-1);
+
+        emit firstPassFinished();
+    }
+
+    QStringList run_args;
+    run_args << "-y";
+    run_args << input_args
+             << map_args
+             << codec_args;
+
+    if(!resize_args.isEmpty())
+        run_args << resize_args;
+
+    if(two_pass)
+    {
+        run_args << bitrate_args
+                 << "-pass" << "2";
+    }
+
+    bool same_file = (m_in_filename == m_out_filename);
+    info.fileName();
+
+    QFile file(info.path() + "/" + info.baseName() + "-tmp." + source_suffix);
+    if(same_file)
+    {
+        if(file.open(QIODevice::WriteOnly))
+            run_args << file.fileName();
+        file.close();
+    }
+    else
+        run_args << output_args;
+
+    process.setArguments(run_args);
 
     process.start();
-    process.waitForFinished();
+    process.waitForFinished(-1);
+
+    emit muxingFinished();
+
+    if(same_file)
+    {
+        QFile source(m_in_filename);
+        source.remove();
+
+        file.rename(m_in_filename);
+    }
 }

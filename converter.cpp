@@ -94,8 +94,11 @@ void Converter::readMediaData(MediaData data)
 void Converter::mux()
 {
     MuxProcess* process = new MuxProcess;
-    //connect(process, &ProbeProcess::resultReady, this, &Converter::readMediaData);
     connect(process, &MuxProcess::finished, process, &MuxProcess::deleteLater);
+    connect(process, &MuxProcess::dataReadyRead, this, &Converter::readMuxState);
+    connect(process, &MuxProcess::firstPassFinished, this, &Converter::firstPassFinished);
+    connect(process, &MuxProcess::muxingFinished, this, &Converter::muxingFinished);
+    connect(process, &MuxProcess::muxStarted, this, &Converter::muxStarted);
 
     process->setInputFile(m_input_filename);
     process->setOutputFile(m_output_filename);
@@ -108,6 +111,7 @@ void Converter::mux()
     MediaData target_data;
     target_data.frame_height = m_fh;
     target_data.frame_width = m_fw;
+    target_data.duration = m_original_data.duration;
 
     for(int key: m_original_data.streams_map.keys())
     {
@@ -133,4 +137,17 @@ void Converter::mux()
     process->setTargetData(target_data);
 
     process->start();
+}
+
+void Converter::readMuxState(QString data)
+{
+    if(data.contains("time="))
+    {
+        auto cur_times = data.split("time=").at(1).split(" bitrate").at(0).split(QRegExp("\\D"), QString::SkipEmptyParts);
+        double time = cur_times.at(0).toInt() * 3600 + cur_times.at(1).toInt() * 60 + cur_times.at(2).toInt();
+
+        double percent = time / m_original_data.duration * 100;
+
+        emit muxStateUpdated(percent);
+    }
 }

@@ -27,10 +27,44 @@ Window {
         inputFilename: filenameField.text
         outputFilename: outFilenameField.text
 
+        property bool twoPass: false
+        property bool secondPass: false
+
         onMediaDataLoaded: {
             videoBitrateField.text = videoBitrate.toString()
             frameWidthField.text = frameWidth.toString()
             frameHeightField.text = frameHeight.toString()
+        }
+
+        onMuxStateUpdated: {
+            var c_percent = 0;
+            if(!twoPass)
+                c_percent = percent
+            else
+                c_percent = (secondPass) ? (50 + percent / 2) : (percent / 2)
+
+            muxingStateProgressBar.value = c_percent
+        }
+
+        onMuxStarted: {
+            twoPass = two_pass
+            secondPass = false
+
+            muxingStateLabel.text = (twoPass) ? "Статус: Первый проход мультиплексирования" : "Статус: Мультиплексирование"
+        }
+
+        onFirstPassFinished: {
+            secondPass = true
+
+            muxingStateLabel.text = "Статус: Мультиплексирование"
+        }
+
+        onMuxingFinished: {
+            muxingStateProgressBar.value = 100
+            twoPass = false
+            secondPass = false
+
+            muxingStateLabel.text = "Статус: Мультиплексирование завершено"
         }
     }
 
@@ -297,7 +331,7 @@ Window {
                     id: countriesModel
 
                     ListElement {
-                        name: ""
+                        name: "Не определено"
                         source: "icons/united-nations.png"
                     }
 
@@ -405,7 +439,7 @@ Window {
         selectMultiple: false
 
         onAccepted: {
-            var filename = outFileDialog.fileUrl
+            var filename = subtitleFileDialog.fileUrl
             var subsUrl = filename.toString().replace("file:///", "");
 
             converter.subtitleModel().addSubtitle(subsUrl)
@@ -582,6 +616,8 @@ Window {
         y: parent.height - height - 10
 
         width: parent.width - 30
+
+        to: 100
 
         background: Rectangle {
             implicitHeight: 22

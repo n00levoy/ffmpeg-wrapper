@@ -7,6 +7,8 @@
 #include <QJsonValue>
 #include <QJsonValueRef>
 
+#include <QDebug>
+
 void ProbeProcess::run()
 {
     QProcess process;
@@ -26,8 +28,10 @@ void ProbeProcess::run()
 
     QJsonObject json = QJsonDocument::fromJson(process.readAll()).object();
     QJsonArray streams_list = json["streams"].toArray();
+    double duration = json["format"].toObject()["duration"].toString().split(".").at(0).toDouble();
 
     MediaData result;
+    result.duration = duration;
 
     bool video_found = false;
     for(auto stream_ref: streams_list)
