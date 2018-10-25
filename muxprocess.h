@@ -25,9 +25,11 @@ private:
 
 signals:
     void dataReadyRead(QString);
-    void firstPassFinished();
-    void muxStarted(bool two_pass);
+
+    void muxingStarted(bool two_pass);
     void muxingFinished();
+
+    void firstPassFinished();
 
 private:
     int m_vb;

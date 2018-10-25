@@ -11,9 +11,14 @@
 Converter::Converter(QObject *parent) : QObject(parent),
     m_stream_count{-1},
     m_vb{-1}, m_fw{-1}, m_fh{-1},
-    m_subtitle_model(new SubtitleModel(this))
+    m_subtitle_model(new SubtitleModel(this)),
+    m_process_time(0, 0)
 {
-
+    connect(&m_process_timer, &QTimer::timeout, [this]()
+    {
+        m_process_time = m_process_time.addSecs(1);
+        emit processTimeElapsed(m_process_time.toString("hh:mm:ss"));
+    });
 }
 
 void Converter::setInputFilename(QString name)
@@ -95,10 +100,10 @@ void Converter::mux()
 {
     MuxProcess* process = new MuxProcess;
     connect(process, &MuxProcess::finished, process, &MuxProcess::deleteLater);
-    connect(process, &MuxProcess::dataReadyRead, this, &Converter::readMuxState);
+    connect(process, &MuxProcess::dataReadyRead, this, &Converter::readMuxingState);
     connect(process, &MuxProcess::firstPassFinished, this, &Converter::firstPassFinished);
     connect(process, &MuxProcess::muxingFinished, this, &Converter::muxingFinished);
-    connect(process, &MuxProcess::muxStarted, this, &Converter::muxStarted);
+    connect(process, &MuxProcess::muxingStarted, this, &Converter::muxingStarted);
 
     process->setInputFile(m_input_filename);
     process->setOutputFile(m_output_filename);
@@ -136,10 +141,13 @@ void Converter::mux()
 
     process->setTargetData(target_data);
 
+    m_process_time = QTime(0, 0);
+    m_process_timer.start(1000);
+
     process->start();
 }
 
-void Converter::readMuxState(QString data)
+void Converter::readMuxingState(QString data)
 {
     if(data.contains("time="))
     {
@@ -148,6 +156,6 @@ void Converter::readMuxState(QString data)
 
         double percent = time / m_original_data.duration * 100;
 
-        emit muxStateUpdated(percent);
+        emit muxingStateUpdated(percent);
     }
 }

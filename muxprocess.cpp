@@ -129,7 +129,7 @@ void MuxProcess::run()
     QFileInfo info(m_in_filename);
     QString source_suffix = info.suffix();
 
-    emit muxStarted(two_pass);
+    emit muxingStarted(two_pass);
 
     if(two_pass)
     {

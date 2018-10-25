@@ -2,6 +2,8 @@
 #define CONVERTER_H
 
 #include <QObject>
+#include <QTimer>
+#include <QTime>
 
 #include "mediadata.h"
 #include "subtitlemodel.h"
@@ -53,6 +55,9 @@ private:
 
     SubtitleModel* m_subtitle_model;
 
+    QTimer m_process_timer;
+    QTime m_process_time;
+
 signals:
     void inputFilenameChanged();
     void outputFilenameChanged();
@@ -63,16 +68,19 @@ signals:
 
     void mediaDataLoaded();
 
-    void muxStateUpdated(double percent);
-    void muxStarted(bool two_pass);
-    void firstPassFinished();
+    void muxingStarted(bool two_pass);
     void muxingFinished();
+
+    void muxingStateUpdated(double percent);
+    void processTimeElapsed(QString duration);
+
+    void firstPassFinished();
 
 public slots:
 
 private slots:
     void readMediaData(MediaData data);
-    void readMuxState(QString info);
+    void readMuxingState(QString info);
 };
 
 #endif // CONVERTER_H

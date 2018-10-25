@@ -36,7 +36,7 @@ Window {
             frameHeightField.text = frameHeight.toString()
         }
 
-        onMuxStateUpdated: {
+        onMuxingStateUpdated: {
             var c_percent = 0;
             if(!twoPass)
                 c_percent = percent
@@ -46,7 +46,11 @@ Window {
             muxingStateProgressBar.value = c_percent
         }
 
-        onMuxStarted: {
+        onProcessTimeElapsed: {
+            muxingTimeLabel.text = duration
+        }
+
+        onMuxingStarted: {
             twoPass = two_pass
             secondPass = false
 
@@ -604,6 +608,22 @@ Window {
 
         text: "Статус"
         font.pixelSize: 18
+        color: Material.accent
+
+        visible: true
+    }
+
+    Label {
+        id: muxingTimeLabel
+        height: 30
+        width: 70
+
+        x: parent.width - 15 - width
+
+        anchors.bottom: muxingStateProgressBar.top
+
+        text: ""
+        font.pixelSize: 16
         color: Material.accent
 
         visible: true
