@@ -31,6 +31,8 @@ signals:
 
     void firstPassFinished();
 
+    void ffmpegFailed();
+
 private:
     int m_vb;
 

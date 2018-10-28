@@ -76,6 +76,8 @@ signals:
 
     void firstPassFinished();
 
+    void ffmpegFailed();
+
 public slots:
 
 private slots:

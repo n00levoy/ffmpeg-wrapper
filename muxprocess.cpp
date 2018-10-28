@@ -5,8 +5,6 @@
 #include <QFileInfo>
 #include <QTime>
 
-#include <QDebug>
-
 void MuxProcess::run()
 {
     QProcess process;
@@ -192,13 +190,18 @@ void MuxProcess::run()
     process.start();
     process.waitForFinished(-1);
 
-    emit muxingFinished();
-
-    if(same_file)
+    if(process.exitStatus() == QProcess::ExitStatus::NormalExit && process.exitCode() == 0)
     {
-        QFile source(m_in_filename);
-        source.remove();
+        if(same_file)
+        {
+            QFile source(m_in_filename);
+            source.remove();
 
-        file.rename(m_in_filename);
+            file.rename(m_in_filename);
+        }
     }
+    else
+        emit ffmpegFailed();
+
+    emit muxingFinished();
 }

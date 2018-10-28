@@ -1,5 +1,4 @@
 #include <QGuiApplication>
-#include <QApplication>
 #include <QQmlApplicationEngine>
 
 #include <QQuickStyle>
@@ -11,7 +10,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     qRegisterMetaType<MediaData>("MediaData");
     qRegisterMetaType<Subtitle>("Subtitle");

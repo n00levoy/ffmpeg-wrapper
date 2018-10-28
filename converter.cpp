@@ -5,9 +5,6 @@
 
 #include <QFileInfo>
 
-#include <QListView>
-#include <QDebug>
-
 Converter::Converter(QObject *parent) : QObject(parent),
     m_stream_count{-1},
     m_vb{-1}, m_fw{-1}, m_fh{-1},
@@ -18,6 +15,13 @@ Converter::Converter(QObject *parent) : QObject(parent),
     {
         m_process_time = m_process_time.addSecs(1);
         emit processTimeElapsed(m_process_time.toString("hh:mm:ss"));
+    });
+
+    connect(this, &Converter::muxingFinished, &m_process_timer, &QTimer::stop);
+    connect(this, &Converter::muxingStarted, [this]()
+    {
+        m_process_time = QTime(0, 0);
+        m_process_timer.start(1000);
     });
 }
 
@@ -104,6 +108,7 @@ void Converter::mux()
     connect(process, &MuxProcess::firstPassFinished, this, &Converter::firstPassFinished);
     connect(process, &MuxProcess::muxingFinished, this, &Converter::muxingFinished);
     connect(process, &MuxProcess::muxingStarted, this, &Converter::muxingStarted);
+    connect(process, &MuxProcess::ffmpegFailed, this, &Converter::ffmpegFailed);
 
     process->setInputFile(m_input_filename);
     process->setOutputFile(m_output_filename);
@@ -140,9 +145,6 @@ void Converter::mux()
     target_data.subs_list = m_subtitle_model->rawData();
 
     process->setTargetData(target_data);
-
-    m_process_time = QTime(0, 0);
-    m_process_timer.start(1000);
 
     process->start();
 }

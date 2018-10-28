@@ -1,15 +1,17 @@
 import QtQuick 2.6
 import QtQuick.Window 2.2
 
-import QtQuick.Layouts 1.3
-
 import QtQuick.Controls 2.4
 import QtQuick.Controls.Material 2.3
 import QtQuick.Dialogs 1.2
 
+import QtWinExtras 1.0
+
 import FFMpeg.Wrapper 1.0
 
 Window {
+    id: mainWindow
+
     visible: true
     width: 800
     height: 600
@@ -20,6 +22,13 @@ Window {
     title: qsTr("Конвертер медиафайлов")
 
     FontLoader { id: fixedFont; source: "/fonts/Roboto-Regular.ttf" }
+
+    TaskbarButton {
+        id: taskbarButton
+
+        progress.visible: true
+        progress.value: 0;
+    }
 
     Converter {
         id: converter
@@ -44,6 +53,7 @@ Window {
                 c_percent = (secondPass) ? (50 + percent / 2) : (percent / 2)
 
             muxingStateProgressBar.value = c_percent
+            taskbarButton.progress.value = c_percent
         }
 
         onProcessTimeElapsed: {
@@ -65,10 +75,29 @@ Window {
 
         onMuxingFinished: {
             muxingStateProgressBar.value = 100
+            taskbarButton.progress.value = 0
+
             twoPass = false
             secondPass = false
 
             muxingStateLabel.text = "Статус: Мультиплексирование завершено"
+        }
+
+        onFfmpegFailed: {
+            errorDialog.visible = true
+        }
+    }
+
+    MessageDialog {
+        id: errorDialog
+        title: "Отказ FFmpeg"
+        text: "Произошла ошибка в работе FFmpeg."
+
+        onAccepted: {
+            visible = false
+        }
+        onRejected: {
+            visible = false
         }
     }
 
@@ -137,9 +166,13 @@ Window {
         selectMultiple: false
 
         onAccepted: {
-            var filename = fileDialog.fileUrl
+            var fUrl = fileDialog.fileUrl
+            var filename = fUrl.toString().replace("file:///", "")
 
-            filenameField.text = filename.toString().replace("file:///", "")
+            filenameField.text = filename
+            if(outFilenameCheckBox.checked)
+                outFilenameField.text = filename
+
             setVisible(false)
         }
         onRejected: {
