@@ -36,8 +36,8 @@ void MuxProcess::run()
     {
         auto val = m_target_data.streams_map[key];
 
-        map_args << "-map"
-                 << "0:" + QString::number(key);
+        if(val != "data")
+            map_args << "-map" << "0:" + QString::number(key);
 
         if(val == "video")
             vs_count++;

@@ -23,13 +23,6 @@ Window {
 
     FontLoader { id: fixedFont; source: "/fonts/Roboto-Regular.ttf" }
 
-    TaskbarButton {
-        id: taskbarButton
-
-        progress.visible: true
-        progress.value: 0;
-    }
-
     Converter {
         id: converter
 
@@ -53,7 +46,9 @@ Window {
                 c_percent = (secondPass) ? (50 + percent / 2) : (percent / 2)
 
             muxingStateProgressBar.value = c_percent
-            taskbarButton.progress.value = c_percent
+
+            if(Qt.platform.os == "windows")
+                taskbarButton.progress.value = c_percent
         }
 
         onProcessTimeElapsed: {
@@ -75,7 +70,9 @@ Window {
 
         onMuxingFinished: {
             muxingStateProgressBar.value = 100
-            taskbarButton.progress.value = 0
+
+            if(Qt.platform.os == "windows")
+                taskbarButton.progress.value = 0
 
             twoPass = false
             secondPass = false
