@@ -4,6 +4,7 @@
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QQmlContext>
+#include <QQmlFileSelector>
 
 #ifdef Q_OS_WIN
     #include <QWinTaskbarButton>
@@ -24,6 +25,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<Converter>("FFMpeg.Wrapper", 1, 0, "Converter");
 
     QQmlApplicationEngine engine;
+    new QQmlFileSelector(&engine);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if(engine.rootObjects().isEmpty())
         return -1;

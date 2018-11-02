@@ -5,6 +5,8 @@ import QtQuick.Controls 2.4
 import QtQuick.Controls.Material 2.3
 import QtQuick.Dialogs 1.2
 
+import QtWinExtras 1.0
+
 import FFMpeg.Wrapper 1.0
 
 Window {
@@ -44,6 +46,7 @@ Window {
                 c_percent = (secondPass) ? (50 + percent / 2) : (percent / 2)
 
             muxingStateProgressBar.value = c_percent
+            taskbarButton.progress.value = c_percent
         }
 
         onProcessTimeElapsed: {
@@ -65,6 +68,7 @@ Window {
 
         onMuxingFinished: {
             muxingStateProgressBar.value = 100
+            taskbarButton.progress.value = 0
 
             twoPass = false
             secondPass = false
