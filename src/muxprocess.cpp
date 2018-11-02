@@ -8,7 +8,13 @@
 void MuxProcess::run()
 {
     QProcess process;
-    process.setProgram("bin/ffmpeg.exe");
+
+    #if defined(Q_OS_WIN)
+        process.setProgram("bin/ffmpeg.exe");
+    #elif defined(Q_OS_LINUX)
+        process.setProgram("ffmpeg");
+    #endif
+
     process.setReadChannelMode(QProcess::MergedChannels);
 
     bool two_pass = (m_vb > 0);

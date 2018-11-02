@@ -156,7 +156,7 @@ Window {
 
         onAccepted: {
             var fUrl = fileDialog.fileUrl
-            var filename = fUrl.toString().replace("file:///", "")
+            var filename = fUrl.toString().replace("file://", "")
 
             filenameField.text = filename
             if(outFilenameCheckBox.checked)
@@ -466,7 +466,7 @@ Window {
 
         onAccepted: {
             var filename = subtitleFileDialog.fileUrl
-            var subsUrl = filename.toString().replace("file:///", "");
+            var subsUrl = filename.toString().replace("file://", "");
 
             converter.subtitleModel().addSubtitle(subsUrl)
 
@@ -612,7 +612,7 @@ Window {
         onAccepted: {
             var filename = outFileDialog.fileUrl
 
-            outFilenameField.text = filename.toString().replace("file:///", "")
+            outFilenameField.text = filename.toString().replace("file://", "")
             setVisible(false)
         }
         onRejected: {

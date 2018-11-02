@@ -7,12 +7,16 @@
 #include <QJsonValue>
 #include <QJsonValueRef>
 
-#include <QDebug>
-
 void ProbeProcess::run()
 {
     QProcess process;
-    process.setProgram("bin/ffprobe.exe");
+
+    #if defined(Q_OS_WIN)
+        process.setProgram("bin/ffprobe.exe");
+    #elif defined(Q_OS_LINUX)
+        process.setProgram("ffprobe");
+    #endif
+
     process.setReadChannelMode(QProcess::MergedChannels);
     process.setArguments(QStringList()
                            << "-v"
