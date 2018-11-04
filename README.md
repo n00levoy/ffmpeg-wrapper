@@ -12,10 +12,12 @@ This app is just a simple GUI wrapper around FFmpeg executables. It lets you hav
 ## Using
 FFmpeg Wrapper functionality heavily relies on ffmpeg executables, so they should be installed in a system.
 
+#### Linux
 On Linux machines you can build them from sources, which can be obtained from official website (https://www.ffmpeg.org/download.html), or download the binary package from a repository, for example, if you are using Ubuntu:
 ```
 sudo apt-get install ffmpeg
 ```
 
+#### Windows
 On Windows it's easier to download precompiled binaries [from here](https://ffmpeg.zeranoe.com/builds/).
 Note that on Windows machine the app will be looking for the ffmpeg executables in a folder ```bin``` next to ```ffmpeg-wrapper.exe```. 
