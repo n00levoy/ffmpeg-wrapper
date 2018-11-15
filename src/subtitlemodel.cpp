@@ -99,8 +99,11 @@ bool SubtitleModel::removeRows(int row, int count, const QModelIndex& parent)
 
     beginRemoveRows(parent, row, row + count - 1);
     int countLeft = count;
-    while(countLeft--)
-        m_subtitles.takeAt(row + (count - 1));
+    while(countLeft)
+    {
+        m_subtitles.takeAt(row + (countLeft - 1));
+        countLeft--;
+    }
     endRemoveRows();
 
     return true;
