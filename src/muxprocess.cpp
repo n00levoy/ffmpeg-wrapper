@@ -5,6 +5,8 @@
 #include <QFileInfo>
 #include <QTime>
 
+#include "stringencoder.h"
+
 void MuxProcess::run()
 {
     QProcess process;
@@ -28,10 +30,15 @@ void MuxProcess::run()
     input_args << "-i"
                << m_in_filename;
 
-    for(auto sub: m_target_data.subs_list)
+    StringEncoder encoder("UTF-8", "Windows-1251");
+    for(const auto& sub: m_target_data.subs_list)
     {
-        if(!sub.filename.isEmpty())
-            input_args << "-i" << sub.filename;
+        QString filename = sub.filename;
+        if(!filename.isEmpty())
+        {
+            encoder.encodeToUtf(filename);
+            input_args << "-i" << filename;
+        }
     }
 
     int vs_count = 0;
@@ -52,7 +59,7 @@ void MuxProcess::run()
     }
 
     int sub_counter = 1;
-    for(auto sub: m_target_data.subs_list)
+    for(const auto& sub: m_target_data.subs_list)
     {
         if(!sub.filename.isEmpty())
         {
@@ -76,7 +83,7 @@ void MuxProcess::run()
                    << "copy";
 
     int ss_counter = 0;
-    for(auto sub: m_target_data.subs_list)
+    for(const auto& sub: m_target_data.subs_list)
     {
         if(sub.filename.isEmpty())
         {
@@ -96,7 +103,7 @@ void MuxProcess::run()
         }
     }
 
-    for(auto sub: m_target_data.subs_list)
+    for(const auto& sub: m_target_data.subs_list)
     {
         if(!sub.filename.isEmpty())
         {

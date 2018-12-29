@@ -21,7 +21,8 @@ SOURCES += \
     probeprocess.cpp \
     converter.cpp \
     subtitlemodel.cpp \
-    muxprocess.cpp
+    muxprocess.cpp \
+    stringencoder.cpp
 
 RESOURCES += qml.qrc \
     resources.qrc
@@ -44,4 +45,5 @@ HEADERS += \
     converter.h \
     mediadata.h \
     subtitlemodel.h \
-    muxprocess.h
+    muxprocess.h \
+    stringencoder.h

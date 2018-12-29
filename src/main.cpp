@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         return -1;
 
 #ifdef Q_OS_WIN
-    auto* window = static_cast<QQuickWindow*>(engine.rootObjects().first());
+    auto* window = dynamic_cast<QQuickWindow*>(engine.rootObjects().first());
 
     QWinTaskbarButton* task_button = new QWinTaskbarButton(window);
     task_button->setWindow(window);

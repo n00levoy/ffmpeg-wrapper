@@ -94,7 +94,7 @@ void Converter::readMediaData(MediaData data)
     m_original_data = data;
 
     m_subtitle_model->clear();
-    for(auto subtitle: data.subs_list)
+    for(const auto& subtitle: data.subs_list)
         m_subtitle_model->addSubtitle(subtitle);
 
     emit mediaDataLoaded();
